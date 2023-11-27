@@ -1,0 +1,42 @@
+services:
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+  cache:
+    image: redis
+    ports:
+      - 6379:6379
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    depends_on:
+      - mongo
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+
+  app:
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '9000:9000'
+    depends_on:
+      - mongo
+      - cache
+    environment:
+      - DB_SERVER=mongodb://root:example@mongo:27017/
+      - DB_NAME=yolo
+      - REDIS_SERVER=redis://cache:6379
